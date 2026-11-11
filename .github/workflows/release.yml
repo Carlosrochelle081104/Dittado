@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build & Package Release
+    runs-on: macos-14
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Cache de Dependências Vendor/
+        uses: actions/cache@v4
+        with:
+          path: Vendor
+          key: ${{ runner.os }}-vendor-${{ hashFiles('scripts/baixar-dependencias.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-vendor-
+
+      - name: Baixar Dependências C/C++ (sem modelos)
+        run: ./scripts/baixar-dependencias.sh --sem-modelos
+
+      - name: Compilar e Empacotar Dittado.app
+        run: ./scripts/build.sh --sem-instalar
+
+      - name: Compactar Dittado.app e Gerar SHA-256
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          cd build
+          ditto -c -k --keepParent Dittado.app "Dittado-${VERSION}-macOS.zip"
+          shasum -a 256 "Dittado-${VERSION}-macOS.zip" > "Dittado-${VERSION}-macOS.zip.sha256"
+          echo "ZIP_PATH=build/Dittado-${VERSION}-macOS.zip" >> $GITHUB_ENV
+          echo "SHA_PATH=build/Dittado-${VERSION}-macOS.zip.sha256" >> $GITHUB_ENV
+          echo "TAG_NAME=${VERSION}" >> $GITHUB_ENV
+
+      - name: Criar Release Rascunho (Draft Release)
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: false
+          name: "Dittado ${{ env.TAG_NAME }}"
+          files: |
+            ${{ env.ZIP_PATH }}
+            ${{ env.SHA_PATH }}
+          generate_release_notes: true

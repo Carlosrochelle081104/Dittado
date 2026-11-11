@@ -1,0 +1,10 @@
+.build/
+build/
+Vendor/
+.DS_Store
+*.wav
+*.gguf
+*.bin
+*.part
+Models/
+scripts/local.env

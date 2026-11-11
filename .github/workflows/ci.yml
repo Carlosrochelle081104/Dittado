@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test (macOS 14 Apple Silicon)
+    runs-on: macos-14
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Cache de Dependências Vendor/
+        uses: actions/cache@v4
+        with:
+          path: Vendor
+          key: ${{ runner.os }}-vendor-${{ hashFiles('scripts/baixar-dependencias.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-vendor-
+
+      - name: Baixar Dependências C/C++ (sem modelos)
+        run: ./scripts/baixar-dependencias.sh --sem-modelos
+
+      - name: Compilar Projeto (swift build)
+        run: swift build -c release
+
+      - name: Executar Suíte Unificada de Testes
+        run: swift run DittadoTeste --testes
+
+      - name: Empacotar Dittado.app (Assinatura Ad-hoc)
+        run: ./scripts/build.sh --sem-instalar
