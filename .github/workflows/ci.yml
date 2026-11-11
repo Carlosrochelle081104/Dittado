@@ -14,8 +14,8 @@ concurrency:
 
 jobs:
   build-and-test:
-    name: Build & Test (macOS 14 Apple Silicon)
-    runs-on: macos-14
+    name: Build & Test (macOS Apple Silicon)
+    runs-on: macos-latest
     steps:
       - name: Checkout do Repositório
         uses: actions/checkout@v4

@@ -11,7 +11,7 @@ permissions:
 jobs:
   build-release:
     name: Build & Package Release
-    runs-on: macos-14
+    runs-on: macos-latest
     steps:
       - name: Checkout do Repositório
         uses: actions/checkout@v4
